@@ -222,6 +222,24 @@ def show_freqs_dep_g1(t1=100., ming1=200.0, maxg1=550., C=250.0, g=10., N=10*N, 
         plt.show()
 
 
+def show_freqs_dep_t1(mint1=35.0, maxg1=65., g1=32.5, C=250.0, g=25.0, N=10*N, returning=False):
+    conductance = np.linspace(ming1, maxg1, N)
+    freqs=np.zeros(N)
+    for i in np.arange(0,N):
+        freqs[ i ] = predict_str_freq(t1=t1, g=g, g1=conductance[ i ], C=C, remote=True)
+    fig1 = plt.figure()
+    ax = fig1.add_subplot(111)
+    ax.plot(conductance, freqs)
+    ax.set_xlabel('Secondary time constant $\tau_1$ [nS]')
+    ax.set_ylabel('Spike frequency $f_R$ [Sp/s]')
+    if returning:
+        return conductance, freqs
+    else:
+        plt.ion()
+        plt.show()
+
+
+
 def show_freqs_dep_g(t1=100., ming=10.0, maxg=100., C=250.0, g1=10., N=10*N, returning=False):
     conductance = np.linspace(ming, maxg, N)
     freqs=np.zeros(N)
