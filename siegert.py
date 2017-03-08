@@ -29,7 +29,7 @@ mu: mean input / average membrane potential
 sigma: std of equivalent GWN input
 """
 
-def mu_ (I_0, g_1, I_N, V_th, V_r, C):
+def mu_ (I_0, g_1, V_th, V_r, C, sigma):
     """
     calculates average voltage for the siegert for a gif2 neuron.
     see eq. (52) in Brunel et al. (2003)
@@ -38,31 +38,34 @@ def mu_ (I_0, g_1, I_N, V_th, V_r, C):
     dis2 = dis / 2. * g_1
 
     h1 = (I_0 - dis2) * (I_0 - dis2)
-    h2 = 2. * g_1 * I_N / C
+    h2 = 2. * g_1 * sigma / C
     h3 = I_0 + dis2
     result = (h3 - np.sqrt(h1 +h2))/2. / g_1
     return result
 
 
-def nu0_gif2(I_0, I_N, tau_m, tau_s, tau_r, tau_N=1., g=25., g_1=25., V_th=20., V_r=14.):
+def nu0_gif2(tau_m, tau_s, tau_r, V_th, V_r, mu, sigma, gamma, mu2):
     """Calculates stationary firing rates for exponential PSCs using
     expression with taylor expansion in k = sqrt(tau_s/tau_m) (Eq. 433
     in Fourcoud & Brunel 2002) for the generalized integrate-and-fire
     model in Richardson et al. (2003), see eq. (A10).
     This only holds for tau_1 >> tau, effectively with a factor > 5.
-    """
-    # tau_1 = 100.
 
-    C = tau_m / g
-    mu = mu_(I_0, g_1, I_N, V_th, V_r, C)
-    gamma = g_1 / g
-    sigma = I_N / g * np.sqrt(tau_N / tau_m)  # (A9)
+    Gaussian noise with mean mu and standard deviation sigma
+    """
+    # (tau_m, tau_s, tau_r, V_th, V_r, mu, sigma)
+    #    +      +      +     +     +
+
+    # C = tau_m / g
+    # gamma = g_1 / g
     # instead use equation 10 from Richardson:
     # sigma = I_N * np.sqrt(tau_N*(C+tau_1*g +g_1*tau_1)/2./C/(g+g_1)/(g*tau_1+C))
 
     alpha = np.sqrt(2.) * abs(zetac(0.5) + 1)
-    x_th = np.sqrt(2.) * (V_th - gamma * mu - I_0/g) / sigma
-    x_r = np.sqrt(2.) * (V_r - gamma * mu - I_0/g) / sigma
+    x_th = np.sqrt(2.) * (V_th + gamma * mu - mu2) / sigma
+    x_r = np.sqrt(2.) * (V_r + gamma * mu - mu2) / sigma  # TODO: missing I_0/g in the bracket
+    # x_th = np.sqrt(2.) * (V_th - mu) / sigma
+    # x_r = np.sqrt(2.) * (V_r - mu) / sigma
 
     # preventing overflow in np.exponent in Phi(s)
     if x_th > 20.0 / np.sqrt(2.):
